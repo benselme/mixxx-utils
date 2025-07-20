@@ -143,6 +143,10 @@ def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
     if is_non_empty_string(trk_row["comment"]):
         attrib["Comments"] = trk_row["comment"]
 
+    # Add grouping if present
+    if is_non_empty_string(trk_row["grouping"]):
+        attrib["Grouping"] = trk_row["grouping"]
+
     # Add color if present
     if not pd.isna(trk_row["color"]):
         attrib["Colour"] = trk_row["color"]
