@@ -108,6 +108,8 @@ def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
     )
     if cfg.REKORDBOX_LIBRARY_FOLDER not in final_location:
         logging.warning("This track is not in the Mixxx library folder: %s", location)
+    if cfg.CONVERT_FLAC_TO_AIF:
+        final_location = Path(final_location).with_suffix(".aif")
 
     if not is_non_empty_string(trk_row["artist"]):
         logging.warning("Artist name is empty for file: %s", location)

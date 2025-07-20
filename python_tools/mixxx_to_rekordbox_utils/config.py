@@ -36,3 +36,5 @@ BEATS_PER_BAR: Final[int] = _config["beats_per_bar"]
 #
 ADD_CRATES_AS_PLAYLIST: Final[bool] = _config["add_crates_as_playlist"]
 CRATES_SUFFIX: Final[str] = _config["crates_suffix"]
+
+CONVERT_FLAC_TO_AIF: Final[bool] = _config["convert_flac_to_aif"]

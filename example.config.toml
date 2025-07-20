@@ -8,6 +8,7 @@ rekordbox_xml_file = "rekordbox_output.xml"
 mixxx_library_folder = "/mnt/data/mixxx_test"
 rekordbox_library_folder = "E:/DNB"
 export_only_tracks_in_playlists = true
+convert_flac_to_aif = false
 
 crates_suffix = "_crates"
 add_crates_as_playlist = true
