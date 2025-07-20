@@ -2,7 +2,11 @@ import sys
 from shutil import copy
 from os.path import exists, expandvars
 from pathlib import Path
-from typing import Final, Literal, Tuple
+from typing import (
+    Final,
+    Literal,
+    Tuple,
+)
 from time import strftime
 
 from urllib.parse import unquote
@@ -146,14 +150,16 @@ def open_mixxx_playlists_with_tracks(
     filter_hidden: bool,
     add_crates_as_playlist: bool,
     crate_suffix: str,
+    exclude_playlists: list[str],
+    exclude_crates: list[str],
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
-    df_pls = _open_mixxx_playlists(filter_hidden)
+    df_pls = _open_mixxx_playlists(filter_hidden, exclude_playlists)
     df_pls_trk = _open_mixxx_playlist_tracks()
     df_pls_trk = df_pls_trk[df_pls_trk["playlist_id"].isin(df_pls["id"])]
 
     if add_crates_as_playlist:
-        df_crt = _open_mixxx_crates(filter_hidden)
+        df_crt = _open_mixxx_crates(filter_hidden, exclude_crates)
         df_crt_trk = _open_mixxx_crate_tracks()
         df_crt_trk = df_crt_trk[df_crt_trk["crate_id"].isin(df_crt["id"])]
         # conversion
@@ -171,11 +177,13 @@ def open_mixxx_playlists_with_tracks(
     return df_pls, df_pls_trk
 
 
-def _open_mixxx_playlists(filter_hidden: bool) -> pd.DataFrame:
+def _open_mixxx_playlists(filter_hidden: bool, exclude: list[str]) -> pd.DataFrame:
     print(f"Openning the Mixxx playlists from {MIXXX_DB}.")
     df = open_table_as_df(MIXXX_DB, "Playlists")
     if filter_hidden:
         df = df[df["hidden"] == 0]
+    if exclude:
+        df = df[~df["name"].isin(exclude)]
     return df
 
 
@@ -184,11 +192,13 @@ def _open_mixxx_playlist_tracks() -> pd.DataFrame:
     return open_table_as_df(MIXXX_DB, "PlaylistTracks")
 
 
-def _open_mixxx_crates(filter_hidden: bool) -> pd.DataFrame:
+def _open_mixxx_crates(filter_hidden: bool, exclude: list[str]) -> pd.DataFrame:
     print(f"Openning the Mixxx crates from {MIXXX_DB}.")
     df = open_table_as_df(MIXXX_DB, "crates")
     if filter_hidden:
         df = df[df["show"] == 1]  # not very consistent with the playlist :-p
+    if exclude:
+        df = df[~df["name"].isin(exclude)]
     return df
 
 

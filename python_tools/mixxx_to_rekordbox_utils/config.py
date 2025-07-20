@@ -38,3 +38,6 @@ ADD_CRATES_AS_PLAYLIST: Final[bool] = _config["add_crates_as_playlist"]
 CRATES_SUFFIX: Final[str] = _config["crates_suffix"]
 
 CONVERT_FLAC_TO_AIF: Final[bool] = _config["convert_flac_to_aif"]
+
+EXCLUDE_PLAYLISTS: Final[list[str]] = _config["exclude_playlists"]
+EXCLUDE_CRATES: Final[list[str]] = _config["exclude_crates"]

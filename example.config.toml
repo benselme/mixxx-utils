@@ -12,6 +12,9 @@ convert_flac_to_aif = false
 
 crates_suffix = "_crates"
 add_crates_as_playlist = true
+exclude_crates = []
+exclude_playlists = []
+
 beats_per_bar = 4
 index_cue_bar_start = 3
 mp3_decoder = "MAD"

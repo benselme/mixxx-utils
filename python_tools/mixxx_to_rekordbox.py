@@ -211,6 +211,8 @@ if __name__ == "__main__":
         filter_hidden=True,
         add_crates_as_playlist=cfg.ADD_CRATES_AS_PLAYLIST,
         crate_suffix=cfg.CRATES_SUFFIX,
+        exclude_playlists=cfg.EXCLUDE_PLAYLISTS,
+        exclude_crates=cfg.EXCLUDE_CRATES,
     )
     if cfg.EXPORT_ONLY_TRACKS_IN_PLAYLISTS:
         df_lib = df_lib[df_lib["id"].isin(df_pls_trk["track_id"])]
