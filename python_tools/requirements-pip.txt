@@ -4,3 +4,4 @@ pandas
 jellyfish
 tqdm
 sqlalchemy
+tomli

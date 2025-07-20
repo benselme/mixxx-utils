@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 import os
-import tomllib
+import tomli
 from typing import Any
 
 
@@ -21,4 +21,4 @@ def get_config() -> dict[str, Any]:
         print(msg)
         sys.exit(1)
 
-    return tomllib.loads(config_path.read_text())
+    return tomli.loads(config_path.read_text())
