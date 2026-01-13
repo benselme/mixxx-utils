@@ -42,6 +42,7 @@ def get_case_mp3(audiofile: eyed3.mp3.Mp3AudioFile) -> Literal["A", "B", "C", "D
 def get_offset_mp3(
     audiofile: eyed3.mp3.Mp3AudioFile, mp3_decoder: accepted_mp3_decoders
 ) -> int:
+    """Return offset in milliseconds depending on the MP3 decoder used."""
     check_mp3_decoder_value(mp3_decoder)
     #
     case = get_case_mp3(audiofile)
