@@ -263,7 +263,7 @@ def write_df_to_table(
         if_exists: Literal["fail", "replace", "append"] = "replace"
     else:
         if_exists = "fail"
-    connection = sqlite3.connect(db_path)
+    connection = sqlite3.connect(db_path or MIXXX_DB)
     df.to_sql(
         table_name,
         connection,

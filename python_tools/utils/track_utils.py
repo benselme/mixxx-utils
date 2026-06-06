@@ -16,13 +16,21 @@ def position_sec_to_frame(time_sec: float, samplerate: float) -> int:
     return round(time_sec * (2 * samplerate))
 
 
-def beatgrid_frame_to_sec(frame: int, samplerate: float) -> float:
-    return frame / samplerate
+def get_fixed_beat_grid(beats: bytes, samplerate: int) -> bytes:
+    """If the declared first beat is at a position slightly earlier than the beat length,
+    it means the first beat is actually at position 0. It happens when using Adjust beatgrid
+    in mixxx that the play position will be slightly before 0.
 
-
-# YAGNI
-# def beatgrid_sec_to_frame(time_sec: float, samplerate: float) -> int:
-#     return round(time_sec * samplerate)
+    Return the adjusted beatgrid.
+    """
+    beatgrid = beats_pb2.BeatGrid()  # type: ignore
+    beatgrid.ParseFromString(beats)
+    start = beatgrid.first_beat.frame_position
+    start_sec = start / samplerate
+    beat_length = 60.0 / beatgrid.bpm.bpm
+    if -(beat_length * 100 * 0.15) < (start_sec - beat_length) * 100 < 0:
+        beatgrid.first_beat.frame_position = 0
+    return beatgrid.SerializeToString()
 
 
 @dataclass
@@ -31,11 +39,18 @@ class BeatGridInfo:
     start_sec: float
     bpm: float
 
-    def __init__(self, library_row: pd.Series):
+    def __init__(self, beats: bytes, samplerate: int) -> None:
         beatgrid = beats_pb2.BeatGrid()  # type: ignore
-        beatgrid.ParseFromString(library_row["beats"])
+        beatgrid.ParseFromString(beats)
         self.start = beatgrid.first_beat.frame_position
-        self.start_sec = beatgrid_frame_to_sec(self.start, library_row["samplerate"])
+        start_sec = self.start / samplerate
+        beat_length = 60.0 / beatgrid.bpm.bpm
+        if start_sec < 0:
+            start_sec += beat_length
+
+        if start_sec > beat_length:
+            start_sec -= beat_length
+        self.start_sec = start_sec
         self.bpm = beatgrid.bpm.bpm
 
 
@@ -81,5 +96,5 @@ def guess_inizio_sec(
     hot_cue_frame_pos: int, samplerate: float, bpm: float, beats_per_bar: int
 ) -> float:
     hot_cue_sec = position_frame_to_sec(hot_cue_frame_pos, samplerate)
-    interval_sec = 60 / bpm
+    interval_sec = 60 / bpm  # length of a single beat in seconds
     return hot_cue_sec % (beats_per_bar * interval_sec)

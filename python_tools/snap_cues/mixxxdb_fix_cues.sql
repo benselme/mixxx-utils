@@ -5,7 +5,8 @@
 ATTACH DATABASE "/tmp/custom_music_db.sqlite" AS CustomMusicDb;
 
 UPDATE cues
-SET position = custom_table.position
+SET position = custom_table.position,
+    length = custom_table.length
     FROM CustomMusicDb.custom_table as custom_table
     WHERE cues.id = custom_table.id;
 

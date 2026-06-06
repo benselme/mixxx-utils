@@ -72,7 +72,7 @@ def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
         cfg.INDEX_CUE_BAR_START <= 0
         or cfg.INDEX_CUE_BAR_START - 1 not in cue_rows["hotcue"].values
     ):
-        beatgrid_info = BeatGridInfo(trk_row)
+        beatgrid_info = BeatGridInfo(trk_row["beats"], trk_row["samplerate"])
         inizio = beatgrid_info.start_sec
     else:
         cue_point = cue_rows[cfg.INDEX_CUE_BAR_START - 1 == cue_rows["hotcue"]]
@@ -93,7 +93,7 @@ def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
         )
 
     attrib: AttribDict = {
-        "Inizio": inizio + offset_start_beatgrid_ms / 1000,
+        "Inizio": f"{inizio + offset_start_beatgrid_ms / 1000:.10f}",
         "Bpm": bpm,
         "Metro": f"{cfg.BEATS_PER_BAR}/{cfg.BEATS_PER_BAR}",
         "Battito": "1",
@@ -108,8 +108,8 @@ def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
     )
     if cfg.REKORDBOX_LIBRARY_FOLDER not in final_location:
         logging.warning("This track is not in the Mixxx library folder: %s", location)
-    if cfg.CONVERT_FLAC_TO_AIF:
-        final_location = Path(final_location).with_suffix(".aif")
+    if cfg.CONVERT_FLAC_TO_AIF and Path(final_location).suffix == ".flac":
+        final_location = str(Path(final_location).with_suffix(".aif"))
 
     if not is_non_empty_string(trk_row["artist"]):
         logging.warning("Artist name is empty for file: %s", location)
@@ -160,15 +160,39 @@ def mixxx_cue_row_to_rekbox_xml(
     assert isinstance(samplerate, float)
     assert isinstance(offset_ms, int)
     # -1 is to create a memory cue
-    cue_nums = [-1, cue_row_["hotcue"]]
-    for cnum in cue_nums:
+    start_pos = (
+        position_frame_to_sec(cue_row_["position"], samplerate) + offset_ms / 1000
+    )
+    end_pos = (
+        position_frame_to_sec(cue_row_["position"] + cue_row["length"], samplerate)
+        + offset_ms / 1000
+    )
+    if cue_row_["type"] == 1:  # hotcue
         attrib: AttribDict = {
             "Type": "0",
-            "Num": cnum,
-            "Start": position_frame_to_sec(cue_row_["position"], samplerate)
-            + offset_ms / 1000,
+            "Num": cue_row_["hotcue"],
+            "Start": f"{start_pos:.10f}",
+            "Name": cue_row_["label"],
         }
         yield get_elem("POSITION_MARK", attrib)
+        attrib["Num"] = -1
+        yield get_elem("POSITION_MARK", attrib)
+    elif cue_row_["type"] == 6:  # intro markers
+        attrib: AttribDict = {
+            "Type": "0",
+            "Num": -1,
+            "Start": f"{start_pos:.10f}",
+            "Name": "I_S",
+        }
+        yield get_elem("POSITION_MARK", attrib)
+        if end_pos != start_pos:
+            attrib: AttribDict = {
+                "Type": "0",
+                "Num": -1,
+                "Start": f"{end_pos:.10f}",
+                "Name": "I_E",
+            }
+            yield get_elem("POSITION_MARK", attrib)
 
 
 def mixxx_playlist_to_rekordbox_xml(
@@ -218,8 +242,8 @@ if __name__ == "__main__":
         df_lib = df_lib[df_lib["id"].isin(df_pls_trk["track_id"])]
 
     # Filter out tracks with "STEM" in comments
-    df_lib = df_lib[~df_lib["comment"].str.contains("STEM", case=False, na=False)]
-    print(f"Filtered out {len(df_lib)} tracks with STEM in comments")
+    # df_lib = df_lib[~df_lib["comment"].str.contains("STEM", case=False, na=False)]
+    # print(f"Filtered out {len(df_lib)} tracks with STEM in comments")
 
     # Convert the colors
     convert_colors_for_rekordbox(df_lib["color"])
